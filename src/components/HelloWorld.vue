@@ -1,43 +1,34 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-pwa" target="_blank" rel="noopener">pwa</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-router" target="_blank" rel="noopener">router</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-vuex" target="_blank" rel="noopener">vuex</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div class="home">
+    <div id="app">
+      <div class="modal" v-if="showModal">
+        <div class="modal-content">
+          <h2>Welcome to Memory Game</h2>
+          <input type="text" placeholder="Enter Player 1's Name" v-model="player1Name">
+          <input type="text" placeholder="Enter Player 2's Name" v-model="player2Name">
+          <button @click="startGame">Start Game</button>
+        </div>
+      </div>
+      <div class="scoreboard" v-if="!showModal">
+        <h2>Scoreboard</h2>
+        <p>{{ player1Name }}: {{ player1Score }}</p>
+        <p>{{ player2Name }}: {{ player2Score }}</p>
+      </div>
+      <div class="game-board" v-if="!showModal">
+        <div class="card" v-for="(card, index) in shuffledCards" :key="index" @click="flipCard(index)">
+          <i v-if="!card.flipped" class="fas fa-question"></i>
+          <i v-else class="fas" :class="card.icon"></i>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
+ 
+
 <script>
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
+  
 }
 </script>
 
@@ -58,3 +49,72 @@ a {
   color: #42b983;
 }
 </style>
+
+<script>
+export default {
+  name: 'HomeView',
+  data() {
+    return {
+      showModal: true,
+      player1Name: '',
+      player2Name: '',
+      player1Score: 0,
+      player2Score: 0,
+      cards: [
+        { icon: 'fa-anchor', flipped: false, matched: false },
+        { icon: 'fa-anchor', flipped: false, matched: false },
+        // Add more cards for the rest of the deck
+      ],
+      flippedCards: [],
+      canFlip: true
+    };
+  },
+  computed: {
+    shuffledCards() {
+      return this.cards.sort(() => Math.random() - 0.5);
+    }
+  },
+  methods: {
+    startGame() {
+      this.showModal = false;
+    },
+    flipCard(index) {
+      if (!this.canFlip || this.cards[index].flipped || this.flippedCards.length >= 2) return;
+
+      this.cards[index].flipped = true;
+      this.flippedCards.push(index);
+
+      if (this.flippedCards.length === 2) {
+        this.canFlip = false;
+        setTimeout(() => {
+          this.checkMatch();
+          this.flippedCards = [];
+          this.canFlip = true;
+        }, 1000);
+      }
+    },
+    checkMatch() {
+      const card1 = this.cards[this.flippedCards[0]];
+      const card2 = this.cards[this.flippedCards[1]];
+
+      if (card1.icon === card2.icon) {
+        card1.matched = true;
+        card2.matched = true;
+        if (this.player1Turn) {
+          this.player1Score++;
+        } else {
+          this.player2Score++;
+        }
+      } else {
+        card1.flipped = false;
+        card2.flipped = false;
+      }
+    }
+  }
+};
+</script>
+
+<style>
+/* Add your CSS styling here */
+</style>
+
